@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Personal Finance Tracker</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <header>
+    <div>
+      <h1>Personal Finance Tracker</h1>
+      <p>Manage your money in one place</p>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">
+      Dashboard
+    </button>
+
+    <button class="tab-btn" data-tab="transactions">
+      Income & Expenses
+    </button>
+
+    <button class="tab-btn" data-tab="investments">
+      Investments
+    </button>
+
+    <button class="tab-btn" data-tab="watchlist">
+      Stocks to Watch
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="tab-content active">
+
+      <h2>Dashboard</h2>
+
+      <div id="cashFlowBox" class="cash-flow">
+        <p>Net Cash Flow</p>
+        <h2 id="netCashFlow">₹0</h2>
+      </div>
+
+      <div class="flow-wrapper">
+        <h3>Monthly Money Flow</h3>
+
+        <div class="flow-bar">
+          <div id="expenseFlow"></div>
+          <div id="emiFlow"></div>
+          <div id="sipFlow"></div>
+        </div>
+
+        <small>
+          Expenses / EMI / SIP as a percentage of income
+        </small>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <div class="card">
+          <span>Total Income</span>
+          <strong id="incomeTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>Total Expenses</span>
+          <strong id="expenseTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>Monthly EMI</span>
+          <strong id="emiTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>Monthly SIP</span>
+          <strong id="sipTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>Outstanding Debt</span>
+          <strong id="debtTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>FD Value</span>
+          <strong id="fdTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>SIP Contributed</span>
+          <strong id="sipContributionTotal">₹0</strong>
+        </div>
+
+        <div class="card">
+          <span>Stocks Invested</span>
+          <strong id="stocksTotal">₹0</strong>
+        </div>
+
+      </div>
+
+      <div class="quick-add">
+
+        <div class="form-card">
+          <h3>Quick Add Salary</h3>
+
+          <input
+            id="quickIncomeName"
+            type="text"
+            placeholder="Source e.g. Salary"
+          />
+
+          <input
+            id="quickIncomeAmount"
+            type="number"
+            min="0"
+            placeholder="Amount"
+          />
+
+          <button id="quickIncomeBtn">
+            Add Income
+          </button>
+        </div>
+
+        <div class="form-card">
+          <h3>Quick Add Expense</h3>
+
+          <input
+            id="quickExpenseName"
+            type="text"
+            placeholder="Expense"
+          />
+
+          <input
+            id="quickExpenseAmount"
+            type="number"
+            min="0"
+            placeholder="Amount"
+          />
+
+          <button id="quickExpenseBtn">
+            Add Expense
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- INCOME & EXPENSES -->
+    <section id="transactions" class="tab-content">
+
+      <h2>Income & Expenses</h2>
+
+      <div class="two-column">
+
+        <div class="form-card">
+
+          <h3>Add Income</h3>
+
+          <input
+            id="incomeName"
+            type="text"
+            placeholder="Income source"
+          />
+
+          <input
+            id="incomeAmount"
+            type="number"
+            min="0"
+            placeholder="Amount"
+          />
+
+          <input
+            id="incomeDate"
+            type="date"
+          />
+
+          <button id="addIncomeBtn">
+            Add Income
+          </button>
+
+        </div>
+
+        <div class="form-card">
+
+          <h3>Add Expense</h3>
+
+          <input
+            id="expenseName"
+            type="text"
+            placeholder="Expense name"
+          />
+
+          <input
+            id="expenseAmount"
+            type="number"
+            min="0"
+            placeholder="Amount"
+          />
+
+          <select id="expenseCategory">
+            <option value="Food">Food</option>
+            <option value="Rent">Rent</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills">Bills</option>
+            <option value="Health">Health</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <input
+            id="expenseDate"
+            type="date"
+          />
+
+          <input
+            id="expenseWhy"
+            type="text"
+            placeholder="Why? (optional)"
+          />
+
+          <button id="addExpenseBtn">
+            Add Expense
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="list-section">
+
+        <h3>Income History</h3>
+
+        <div id="incomeList"></div>
+
+      </div>
+
+      <div class="list-section">
+
+        <div class="section-heading">
+
+          <h3>Expense History</h3>
+
+          <select id="expenseFilter">
+            <option value="All">All Categories</option>
+            <option value="Food">Food</option>
+            <option value="Rent">Rent</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills">Bills</option>
+            <option value="Health">Health</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+          </select>
+
+        </div>
+
+        <div id="expenseList"></div>
+
+      </div>
+
+    </section>
+
+    <!-- INVESTMENTS -->
+    <section id="investments" class="tab-content">
+
+      <h2>Investments</h2>
+
+      <!-- LOANS -->
+      <div class="investment-section">
+
+        <h3>Loans</h3>
+
+        <div class="form-grid">
+
+          <input
+            id="loanName"
+            type="text"
+            placeholder="Loan name"
+          />
+
+          <input
+            id="loanEmi"
+            type="number"
+            min="0"
+            placeholder="Monthly EMI"
+          />
+
+          <input
+            id="loanRate"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Interest rate %"
+          />
+
+          <input
+            id="loanMonths"
+            type="number"
+            min="0"
+            placeholder="Months left"
+          />
+
+          <button id="addLoanBtn">
+            Add Loan
+          </button>
+
+        </div>
+
+        <div id="loanList"></div>
+
+      </div>
+
+      <!-- FIXED DEPOSITS -->
+      <div class="investment-section">
+
+        <h3>Fixed Deposits</h3>
+
+        <div class="form-grid">
+
+          <input
+            id="fdName"
+            type="text"
+            placeholder="FD name"
+          />
+
+          <input
+            id="fdPrincipal"
+            type="number"
+            min="0"
+            placeholder="Principal"
+          />
+
+          <input
+            id="fdRate"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Interest rate %"
+          />
+
+          <label>
+            Start date
+            <input id="fdStartDate" type="date" />
+          </label>
+
+          <label>
+            Maturity date
+            <input id="fdMaturityDate" type="date" />
+          </label>
+
+          <button id="addFdBtn">
+            Add FD
+          </button>
+
+        </div>
+
+        <div id="fdList"></div>
+
+      </div>
+
+      <!-- SIP -->
+      <div class="investment-section">
+
+        <h3>SIPs</h3>
+
+        <div class="form-grid">
+
+          <input
+            id="sipName"
+            type="text"
+            placeholder="SIP name"
+          />
+
+          <input
+            id="sipMonthly"
+            type="number"
+            min="0"
+            placeholder="Monthly contribution"
+          />
+
+          <label>
+            Start date
+            <input id="sipStartDate" type="date" />
+          </label>
+
+          <button id="addSipBtn">
+            Add SIP
+          </button>
+
+        </div>
+
+        <div id="sipList"></div>
+
+      </div>
+
+      <!-- STOCKS -->
+      <div class="investment-section">
+
+        <h3>My Stocks</h3>
+
+        <div class="form-grid">
+
+          <input
+            id="stockName"
+            type="text"
+            placeholder="Stock name"
+          />
+
+          <input
+            id="stockSector"
+            type="text"
+            placeholder="Sector"
+          />
+
+          <input
+            id="stockQuantity"
+            type="number"
+            min="0"
+            placeholder="Quantity"
+          />
+
+          <input
+            id="stockPrice"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Buy price"
+          />
+
+          <button id="addStockBtn">
+            Add Stock
+          </button>
+
+        </div>
+
+        <div id="stockList"></div>
+
+      </div>
+
+    </section>
+
+    <!-- WATCHLIST -->
+    <section id="watchlist" class="tab-content">
+
+      <h2>Stocks to Watch</h2>
+
+      <div class="warning">
+        Sample data for learning purposes only.
+        Prices are not live and this is not investment advice.
+      </div>
+
+      <div class="watch-controls">
+
+        <select id="watchSectorFilter">
+          <option value="All">All Sectors</option>
+        </select>
+
+        <button id="sortPerformersBtn">
+          Sort Top Performers
+        </button>
+
+      </div>
+
+      <div id="watchList"></div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Personal Finance Tracker • Assignment Project</p>
+  </footer>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
