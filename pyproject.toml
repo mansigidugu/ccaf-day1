@@ -25,4 +25,5 @@ build-backend = "uv_build"
 members = [
     "caching-batching-assignment",
     "clean-json-validation",
+    "d17/agent_sdk",
 ]

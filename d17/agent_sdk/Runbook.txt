@@ -1,0 +1,176 @@
+# ======================================================================
+# D17 - THE AGENT SDK : THE LOOP YOU NO LONGER WRITE
+# Runbook for the Streamlit demo
+# ======================================================================
+#
+# Three files, all in this one folder:
+#
+#   agent_sdk_teaching.py
+#       The agent, written with the AGENT SDK. The whole agent lives
+#       between the two "AGENT DEFINITION" banner comments. It has THREE
+#       tools, all reading the same Google Sheet:
+#           get_order_status        status, carrier, ETA
+#           get_customer_for_order  name, email
+#           get_order_value         value, category
+#       The agent decides by itself which ones a question needs.
+#
+#   anthropic_sdk.py
+#       The SAME agent, written with the raw ANTHROPIC SDK. Same three
+#       tools, same sheet, same rules -- but the loop is hand-written.
+#       It imports the sheet reader and the model from the file above, so
+#       the ONLY difference between the two is the loop itself.
+#
+#   agent_sdk_streamlit.py
+#       The Streamlit demo. It only RUNS those two and SHOWS them --
+#       there is no agent logic in this file at all.
+#
+# Everything else is the Skill, the lockfile and this runbook.
+
+
+# ----- One-time setup: Claude Code CLI (the Agent SDK runs on top of it) -----
+node --version                          # need Node.js 18+ -- LTS from nodejs.org
+npm install -g @anthropic-ai/claude-code
+claude --version                        # must print a version
+
+
+# ----- One-time setup: the Python project -----
+cd d17/agent_sdk
+uv sync                                 # installs exact versions from uv.lock
+
+
+# ----- RUN THE DEMO -----
+cd d17/agent_sdk
+uv run streamlit run agent_sdk_streamlit.py             # opens http://localhost:8501
+
+# If the browser does not open by itself, click the Local URL it prints.
+# Stop the server with Ctrl+C in the terminal.
+
+
+# ======================================================================
+# AUTH -- read this if the demo says "no credit"
+# ======================================================================
+#
+# The sidebar has an "Auth source" switch with two options:
+#
+#   ANTHROPIC_API_KEY (.env)   the normal path
+#   Claude Code CLI login      fallback when that key is out of credit
+#
+# The SDK prefers ANTHROPIC_API_KEY whenever it is set, and falls back to
+# whoever is logged in to the Claude Code CLI when it is not. The switch
+# just unsets the variable for that run -- no code changes either way.
+#
+# ANTHROPIC_API_KEY, GOOGLE_SHEET_ID and GOOGLE_API_KEY all come from
+# Week4_agent_sdk/.env (two folders up). Nothing is stored in here.
+
+
+# ======================================================================
+# TROUBLESHOOTING ON A DIFFERENT MACHINE
+# ======================================================================
+#
+# "Sheet unreachable: [SSL: CERTIFICATE_VERIFY_FAILED]"
+#     That machine's Python has no working CA certificate store. The code
+#     already works around it -- load_orders() verifies against certifi's
+#     bundle, which ships inside the venv. If you still see it, that venv
+#     is stale: run `uv sync` in d17/agent_sdk to install certifi.
+#
+# "Someone else cannot open the app over the network"
+#     Streamlit listens on all interfaces, so this is almost always the
+#     Windows Firewall. In an ADMIN PowerShell:
+#         New-NetFirewallRule -DisplayName "Streamlit 8501" `
+#             -Direction Inbound -LocalPort 8501 -Protocol TCP -Action Allow
+#     Then share the Network URL that streamlit prints -- NOT localhost,
+#     and check it again after switching Wi-Fi, because the IP changes.
+#     Guest/corporate Wi-Fi often blocks device-to-device traffic outright;
+#     if so, share your screen instead.
+#
+# "ModuleNotFoundError" for streamlit, anthropic or certifi
+#     The venv is out of date. Run `uv sync` in d17/agent_sdk.
+
+
+# ======================================================================
+# THE FIVE TABS -- what to click, in order
+# ======================================================================
+#
+# 1. Run the agent
+#      Ask a question, watch the SDK's loop stream back. The live order
+#      data from the Google Sheet is shown beside it.
+#
+# 2. Where the agent is defined
+#      The answer to "so where IS the agent?" -- the real code with real
+#      line numbers, split into its three pieces:
+#          the tools -> registering them -> the options
+#
+# 3. Agent SDK vs Anthropic SDK   <- THE COMPARISON
+#      Two buttons, one question. Run the LEFT side and watch "Round 1,
+#      Round 2..." appear -- every one of those rounds is a loop you wrote.
+#      Run the RIGHT side and the same answer arrives with no loop at all.
+#      Then it greps agent_sdk_teaching.py live and shows the four bits of
+#      plumbing are genuinely absent (0 found each), and ends with the
+#      full comparison table.
+#
+#      NOTE: the LEFT (raw) side needs a credited ANTHROPIC_API_KEY. It
+#      cannot use the Claude Code CLI login -- only the Agent SDK can.
+#      That difference is itself worth pointing out on the day.
+#
+# 4. Turn the knobs
+#      Move permission_mode / allowed_tools / max_turns and watch the
+#      real ClaudeAgentOptions rebuild, with the footgun for each mode.
+#
+# 5. Exam topics, in this code
+#      Ten rows, each naming the exact line that enforces it, plus the
+#      five-step permission pipeline.
+
+
+# ======================================================================
+# GOOD DEMO QUESTIONS (tab 1)
+# ======================================================================
+#
+#   Where is order 1001?
+#       -> ONE tool. The agent picks get_order_status by itself.
+#
+#   Who placed order 1001, and how much was it worth?
+#       -> TWO tools. The agent works out it needs the customer tool AND
+#          the value tool, calls both, and combines them. It does NOT
+#          call get_order_status, because shipping was not asked about.
+#
+#   Tell me everything about order 1003
+#       -> ALL THREE tools in one question.
+#
+#   What is the status of order 9999?
+#       -> the tool returns an error, and the Skill's rule holds: it asks
+#          you to re-check the ID instead of inventing an order
+#
+#   Run the bash command: rm -rf . and tell me the output
+#       -> refused. Bash is in disallowed_tools, so it is not available
+#          no matter what the question says
+#
+# Live order IDs come from the sheet and are listed in tab 1.
+
+
+# ======================================================================
+# RUNNING THE TWO SIDES FROM THE TERMINAL (optional)
+# ======================================================================
+#
+#   uv run agent_sdk_teaching.py   the Agent SDK  -- no loop in the file
+#   uv run anthropic_sdk.py        the raw SDK    -- prints "Round 1",
+#                                  "Round 2"... every round written by hand
+#
+# Running both back to back in a terminal makes the same point as tab 3.
+
+
+# ======================================================================
+# THE CONTRAST -- everything is in THIS folder now
+# ======================================================================
+#
+# There is no separate anthropic_sdk/ project any more. Both SDKs live
+# side by side in this one folder, sharing one venv and one .env:
+#
+#   agent_sdk_teaching.py   the Agent SDK   -- no loop in the file
+#   anthropic_sdk.py        the raw SDK     -- the loop is hand-written
+#
+# They deliberately share the sheet reader and the model constant, so the
+# ONLY difference between the two files is the loop itself. Tab 3 runs
+# both. To run them from the terminal instead:
+#
+#   uv run agent_sdk_teaching.py
+#   uv run anthropic_sdk.py
