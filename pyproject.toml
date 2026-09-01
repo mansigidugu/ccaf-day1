@@ -24,6 +24,5 @@ build-backend = "uv_build"
 [tool.uv.workspace]
 members = [
     "caching-batching-assignment",
-    "clean-json-validation",
     "d17/agent_sdk",
 ]
