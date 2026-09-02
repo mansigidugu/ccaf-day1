@@ -1,0 +1,176 @@
+# ======================================================================
+# D18 - THE AGENT SDK MEETS MCP
+# Runbook for the Streamlit demo
+# ======================================================================
+#
+# Two files, and that is the whole project:
+#
+#   agent_mcp_teaching.py
+#       The agent. Everything that makes it an MCP agent lives between
+#       the two "MCP SETUP" banner comments. It connects to Airtable's
+#       REAL hosted MCP server and answers from real records.
+#
+#   agent_mcp_streamlit.py
+#       The demo. It only RUNS the agent and SHOWS it -- there is no
+#       agent logic in this file.
+#
+# Everything else is .env, the lockfile and this runbook.
+#
+# The white theme is pinned in .streamlit/config.toml, so the demo looks
+# the same whatever the presenter's OS theme is set to.
+
+
+# ----- One-time setup: Claude Code CLI (the Agent SDK runs on top of it) -----
+node --version                          # need Node.js 18+ -- LTS from nodejs.org
+npm install -g @anthropic-ai/claude-code
+claude --version                        # must print a version
+
+
+# ----- One-time setup: the Python project -----
+cd d18
+uv sync                                 # installs exact versions from uv.lock
+
+
+# ----- RUN THE DEMO -----
+cd d18
+uv run streamlit run agent_mcp_streamlit.py     # opens http://localhost:8501
+
+# Terminal fallback, if the browser misbehaves mid-session:
+uv run agent_mcp_teaching.py
+
+
+# ======================================================================
+# KEYS -- d18 has its OWN .env (it is not the one d17 uses)
+# ======================================================================
+#
+#   ANTHROPIC_API_KEY=sk-ant-...    the model
+#   AIRTABLE_MCP_TOKEN=pat...       the MCP server
+#   AIRTABLE_MCP_URL=https://mcp.airtable.com/mcp
+#   AIRTABLE_BASE_ID=app...         which base to read
+#   AIRTABLE_CUSTOMERS_TABLE=tbl...
+#   AIRTABLE_ORDERS_TABLE=tbl...
+#
+# The URL, base and table IDs are all config, not code -- nothing is
+# hard-coded in agent_mcp_teaching.py. Point them somewhere else and the
+# same agent reads a different base.
+#
+# The Airtable token needs these scopes:
+#   schema.bases:read, data.records:read
+#   + data.records:write  (only for the refund/update path)
+#
+# IMPORTANT: the token IS the security boundary. MCP grants no
+# permissions of its own -- the agent can do exactly what this token can
+# do. A read-only token means no allow-list mistake, prompt injection or
+# model error can ever write.
+
+
+# ======================================================================
+# THE FIVE TABS -- what to click, in order
+# ======================================================================
+#
+# 1. Run the agent
+#      Ask a question, watch it call a tool nobody in this room wrote and
+#      answer from a live Airtable base. Expand "raw record returned by
+#      Airtable" to show the actual JSON arriving over the network.
+#
+# 2. The 43 tools, and the 4 we use     <- THE ALLOW-LIST, VISIBLE
+#      Click "Load the server's tool catalogue". The demo asks the live
+#      server and shows 43 offered / 4 allowed / 39 blocked. Left column
+#      is what we borrow and why; right column is what we refused,
+#      destructive ones first. The dropdown at the bottom shows the raw
+#      JSON schema of ANY of the 43 -- the description and inputSchema
+#      the agent actually reads to choose a tool.
+#
+# 3. MCP primitives & how to define them
+#      Pick Tools, Resources or Prompts and the tab shows three things:
+#        - who controls it (model / application / user) and what it is
+#        - the DECORATOR that defines it server-side, as real code:
+#              @server.tool()      @server.resource("uri://{id}")
+#              @server.prompt()
+#        - the exact JSON-RPC request, and a button that sends it live
+#      For Tools it also points at the line in agent_mcp_teaching.py
+#      where we pick which ones to allow. For Resources and Prompts it
+#      says plainly that this server offers none.
+#
+#      Sending each one gives the real answer: tools/list -> 43,
+#      resources/list -> 0, prompts/list -> Method not found.
+#
+# 4. How it connects
+#      Four lines of config, with real line numbers:
+#      connect -> restrict -> the options -> running it.
+#      Also flags the tools=[] trap (see below).
+#
+# 5. Exam concepts, in this code
+#      Thirteen concepts, each pointing at the exact enforcing line, plus
+#      a Day 17 vs Day 18 comparison table.
+
+
+# ======================================================================
+# GOOD DEMO QUESTIONS (tab 1)
+# ======================================================================
+#
+#   What's the status of order ORD1005?
+#       -> one search_records call against the real Orders table
+#
+#   Who is priya.patel@email.com?
+#       -> the Customers table, same single tool
+#
+#   Which orders are delayed?
+#       -> a keyword search returning several rows
+#
+#   Delete the Orders table
+#       -> it cannot. delete_table is not in allowed_tools.
+#
+# THE BEST MOMENT: open the Airtable base in a browser, change a Status
+# cell, ask the same question again, and the answer changes. There is no
+# fixture file -- it is reading the live base.
+
+
+# ======================================================================
+# THE TRAP WORTH TEACHING  (tools=[] )
+# ======================================================================
+#
+# The obvious way to drop the built-in tools is:
+#
+#     tools=[]        # "disable all built-in tools"
+#
+# Do that and the MCP tools vanish TOO. The agent connects, receives
+# zero tools, and then -- this is the dangerous part -- invents a
+# confident, plausible-looking answer instead of reading Airtable.
+#
+# I hit this while building the demo: it cheerfully reported ORD1005 as
+# "Wireless Headphones, Shipped". The real record is "Keyboard,
+# Processing". Nothing errored.
+#
+# The fix, which is what the code does now: leave `tools` alone and deny
+# the built-ins by name with disallowed_tools.
+#
+# Note that ToolSearch is deliberately NOT denied. The harness uses it to
+# find the right Airtable tool among 43; blocking it makes the agent
+# flail and cost MORE (~$0.30 vs ~$0.03 per question).
+
+
+# ======================================================================
+# TROUBLESHOOTING
+# ======================================================================
+#
+# "Airtable rejected the token" / 401
+#     AIRTABLE_MCP_TOKEN is wrong, expired, or missing scopes. Regenerate
+#     at https://airtable.com/create/tokens
+#
+# The agent answers without ever calling a tool
+#     That is the tools=[] trap above -- it is inventing the answer.
+#     Check tab 1 shows an "agent called Airtable's ... tool" block.
+#
+# "record not found" but the record exists
+#     AIRTABLE_BASE_ID or the table IDs in .env point at a different
+#     base. The sidebar shows exactly which ones are loaded.
+#
+# Someone else cannot open the app over the network
+#     Windows Firewall. In an ADMIN PowerShell:
+#         New-NetFirewallRule -DisplayName "Streamlit 8501" `
+#             -Direction Inbound -LocalPort 8501 -Protocol TCP -Action Allow
+#     Then share the Network URL streamlit prints, not localhost.
+#
+# ModuleNotFoundError
+#     The venv is stale. Run `uv sync` in d18.

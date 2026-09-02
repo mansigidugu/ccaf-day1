@@ -1,0 +1,8 @@
+# Force the light theme, so the demo looks the same on every machine no
+# matter what the presenter's OS theme is set to.
+[theme]
+base = "light"
+primaryColor = "#C1553B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F7F6F3"
+textColor = "#1F2328"
