@@ -1,4 +1,6 @@
 .env
 .venv/
+.venv-windows-backup/
 __pycache__/
 .DS_Store
+*service-account*.json
