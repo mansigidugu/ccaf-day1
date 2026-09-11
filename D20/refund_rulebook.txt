@@ -1,0 +1,86 @@
+REFUND RULEBOOK  --  v2
+========================
+
+Three rules. ALL THREE must pass. Rules 1 and 2 decide IF, Rule 3 decides
+HOW MUCH. Work through them in this order and stop at the first one that
+fails -- then say plainly which one it was.
+
+
+RULE 1 -- THE STATUS  (decides IF this is a refund case at all)
+---------------------------------------------------------------
+An order can only be refunded once it has actually arrived. Read the Status
+column of the Order tab:
+
+    Delivered       -> continue to Rule 2
+    anything else   -> it has not been delivered yet. NOT covered by this
+                       rulebook.
+
+"Anything else" means anything else: Shipped, Delayed, In Transit, Cancelled,
+Returned, unknown, or a blank cell. An order that has not arrived is a
+DELIVERY question, not a refund question, and it is not yours to settle.
+
+Do not treat a late order as delivered because its ETA has passed, and do not
+infer arrival from anything else on the row. The Status cell is the only
+thing that says an order arrived.
+
+
+RULE 2 -- THE WINDOW  (decides IF a refund is owed at all)
+----------------------------------------------------------
+An order is inside the refund window if its Date is within 7 DAYS of today.
+
+    within 7 days   -> continue to Rule 3
+    older than that -> the window has closed. NOT covered by this rulebook.
+
+
+RULE 3 -- THE PERCENTAGE  (decides HOW MUCH)
+--------------------------------------------
+The product category sets the refund percentage:
+
+    CATEGORY        REFUND
+    Electronics     50%
+    Apparel        100%
+    Furniture       30%
+    Perishable       0%
+
+A category that is not in this table is NOT covered by this rulebook.
+A category at 0% is not a refusal you may issue on your own -- it is also
+NOT covered, because refusing money is as consequential as paying it.
+
+
+WHAT "NOT COVERED" MEANS
+------------------------
+It does not mean say no. It means YOU DO NOT DECIDE.
+
+A rule that fails does not produce a refusal. It produces a HANDOFF: say
+plainly which rule ran out, say that a person will follow up, and leave the
+decision to them.
+
+These are all the same forbidden thing, however reasonable they sound:
+
+    "not eligible"          "does not qualify"
+    "cannot process"        "I am unable to offer a refund"
+    "the refund is denied"  "unfortunately we cannot help with this"
+
+Every one of them is a DECISION, and a rule that ran out is precisely the case
+where the decision is not yours to make. Refusing money is as consequential as
+paying it.
+
+Do not ask the customer whether they would like the case escalated, either.
+Handing it to a person is not their choice and not a favour you are offering
+-- it is what happens automatically the moment a rule runs out. Tell them it
+is happening; do not ask permission to do it.
+
+Anything this rulebook does not mention -- damaged goods, wrong item shipped,
+partial deliveries, goodwill requests, anything at all -- is NOT covered.
+Do not reason by analogy from the rules above. There are exactly three rules.
+
+
+WORKED EXAMPLES
+---------------
+Delivered,  3 days ago, Apparel     -> all three pass, 100% -> agent decides
+Delivered,  3 days ago, Electronics -> all three pass,  50% -> agent decides
+Delivered,  3 days ago, Perishable  -> 0%                   -> human decides
+Delivered, 40 days ago, Apparel     -> window closed        -> human decides
+Delayed,    3 days ago, Apparel     -> not delivered yet    -> human decides
+Shipped,    2 days ago, Electronics -> not delivered yet    -> human decides
+Delivered,  3 days ago, damaged     -> no rule for damage   -> human decides

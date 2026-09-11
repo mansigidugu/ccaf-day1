@@ -1,0 +1,113 @@
+{
+  "source": "fake employee directory -- no real people",
+  "employees": [
+    {
+      "employee_id": "E-1001",
+      "name": "Priya Raman",
+      "email": "priya.raman@example.internal",
+      "department": "Sales",
+      "role": "Account Executive",
+      "manager_id": "E-1900",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1002",
+      "name": "Daniel Okafor",
+      "email": "daniel.okafor@example.internal",
+      "department": "Engineering",
+      "role": "Backend Engineer",
+      "manager_id": "E-1901",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1003",
+      "name": "Mei Lin",
+      "email": "mei.lin@example.internal",
+      "department": "Finance",
+      "role": "Financial Analyst",
+      "manager_id": "E-1902",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1004",
+      "name": "Tomas Alvarez",
+      "email": "tomas.alvarez@example.internal",
+      "department": "Support",
+      "role": "Support Specialist",
+      "manager_id": "E-1900",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1005",
+      "name": "Grace Bello",
+      "email": "grace.bello@example.internal",
+      "department": "Engineering",
+      "role": "Intern",
+      "manager_id": "E-1901",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1006",
+      "name": "Owen Whitaker",
+      "email": "owen.whitaker@example.internal",
+      "department": "Sales",
+      "role": "Account Executive",
+      "manager_id": "E-1900",
+      "employment_status": "offboarding"
+    },
+    {
+      "employee_id": "E-1900",
+      "name": "Ada Mensah",
+      "email": "ada.mensah@example.internal",
+      "department": "Sales",
+      "role": "Sales Manager",
+      "manager_id": null,
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1901",
+      "name": "Ivan Petrov",
+      "email": "ivan.petrov@example.internal",
+      "department": "Engineering",
+      "role": "Engineering Manager",
+      "manager_id": null,
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "E-1902",
+      "name": "Sofia Marchetti",
+      "email": "sofia.marchetti@example.internal",
+      "department": "Finance",
+      "role": "Finance Manager",
+      "manager_id": null,
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "manager-001",
+      "name": "Nadia Osei",
+      "email": "nadia.osei@example.internal",
+      "department": "Operations",
+      "role": "Manager",
+      "manager_id": null,
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "employee-001",
+      "name": "Sam Whitfield",
+      "email": "sam.whitfield@example.internal",
+      "department": "Operations",
+      "role": "Employee",
+      "manager_id": "manager-001",
+      "employment_status": "active"
+    },
+    {
+      "employee_id": "employee-002",
+      "name": "Ruth Adeyemi",
+      "email": "ruth.adeyemi@example.internal",
+      "department": "Operations",
+      "role": "Employee",
+      "manager_id": "manager-001",
+      "employment_status": "active"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "policy_version": "2026-09-01",
+  "owner": "Access Governance",
+  "decision_owner_values": [
+    "Agent",
+    "Human"
+  ],
+  "note": "Python reads this file and decides. No agent may edit it, and no prompt may reason past it.",
+  "escalation_rules": {
+    "unknown_requester": "Human",
+    "inactive_requester": "Human",
+    "unknown_resource": "Human",
+    "unknown_action": "Human",
+    "action_not_auto_approvable": "Human",
+    "department_not_allowed": "Human",
+    "role_denied": "Human",
+    "resource_requires_human_approval": "Human",
+    "self_service_not_self": "Human",
+    "outside_self_service_policy": "Human",
+    "manager_escalation": "Human",
+    "admin_role_grant": "Human"
+  },
+  "employment_statuses_allowed": [
+    "active"
+  ],
+  "known_actions": [
+    "read",
+    "write",
+    "deploy",
+    "export",
+    "admin",
+    "reset",
+    "unlock",
+    "speak_to_manager"
+  ],
+  "resources": {
+    "crm-reports": {
+      "label": "Customer CRM reports",
+      "sensitivity": "low",
+      "owner_team": "Revenue Ops",
+      "allowed_departments": [
+        "Sales",
+        "Marketing",
+        "Support"
+      ],
+      "denied_roles": [
+        "Intern"
+      ],
+      "auto_approve_actions": [
+        "read"
+      ],
+      "requires_human_approval": false
+    },
+    "design-assets": {
+      "label": "Shared design asset library",
+      "sensitivity": "low",
+      "owner_team": "Brand",
+      "allowed_departments": [
+        "Sales",
+        "Marketing",
+        "Support",
+        "Engineering",
+        "Finance"
+      ],
+      "denied_roles": [],
+      "auto_approve_actions": [
+        "read"
+      ],
+      "requires_human_approval": false
+    },
+    "deploy-staging": {
+      "label": "Staging deployment pipeline",
+      "sensitivity": "medium",
+      "owner_team": "Platform",
+      "allowed_departments": [
+        "Engineering"
+      ],
+      "denied_roles": [
+        "Intern",
+        "Contractor"
+      ],
+      "auto_approve_actions": [
+        "read",
+        "deploy"
+      ],
+      "requires_human_approval": false
+    },
+    "payroll-ledger": {
+      "label": "Payroll ledger",
+      "sensitivity": "high",
+      "owner_team": "Finance Controls",
+      "allowed_departments": [
+        "Finance"
+      ],
+      "denied_roles": [],
+      "auto_approve_actions": [],
+      "requires_human_approval": true
+    },
+    "prod-database": {
+      "label": "Production customer database",
+      "sensitivity": "high",
+      "owner_team": "Platform",
+      "allowed_departments": [
+        "Engineering"
+      ],
+      "denied_roles": [],
+      "auto_approve_actions": [],
+      "requires_human_approval": true
+    },
+    "own-password": {
+      "label": "The requester's own password",
+      "sensitivity": "low",
+      "owner_team": "IT Helpdesk",
+      "self_service_only": true,
+      "allowed_departments": "any",
+      "denied_roles": [],
+      "auto_approve_actions": [
+        "reset"
+      ],
+      "requires_human_approval": false
+    },
+    "own-account": {
+      "label": "The requester's own account lock state",
+      "sensitivity": "low",
+      "owner_team": "IT Helpdesk",
+      "self_service_only": true,
+      "allowed_departments": "any",
+      "denied_roles": [],
+      "auto_approve_actions": [
+        "unlock"
+      ],
+      "requires_human_approval": false
+    },
+    "Finance-Admins": {
+      "label": "Finance-Admins group membership",
+      "sensitivity": "high",
+      "owner_team": "Finance Controls",
+      "allowed_departments": [
+        "Finance"
+      ],
+      "denied_roles": [],
+      "auto_approve_actions": [],
+      "requires_human_approval": true
+    }
+  }
+}

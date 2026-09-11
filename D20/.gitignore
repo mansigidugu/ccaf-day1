@@ -1,0 +1,12 @@
+# Credentials. .env.example is the committed template; .env never is.
+.env
+*.env
+!.env.example
+
+# The service-account JSON, if it ever lands in the project folder by mistake.
+*service-account*.json
+
+__pycache__/
+*.py[cod]
+.venv/
+.streamlit/secrets.toml

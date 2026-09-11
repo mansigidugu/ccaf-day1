@@ -1,0 +1,14 @@
+{
+  "source": "fake current entitlement holdings -- what each person already has today",
+  "held": {
+    "E-1001": [{"resource": "crm-reports", "actions": ["read"]}, {"resource": "design-assets", "actions": ["read"]}],
+    "E-1002": [{"resource": "design-assets", "actions": ["read"]}],
+    "E-1003": [{"resource": "design-assets", "actions": ["read"]}],
+    "E-1004": [{"resource": "design-assets", "actions": ["read"]}],
+    "E-1005": [{"resource": "design-assets", "actions": ["read"]}],
+    "E-1006": [{"resource": "crm-reports", "actions": ["read"]}],
+    "E-1900": [{"resource": "crm-reports", "actions": ["read"]}],
+    "E-1901": [{"resource": "deploy-staging", "actions": ["read", "deploy"]}],
+    "E-1902": [{"resource": "payroll-ledger", "actions": ["read"]}]
+  }
+}

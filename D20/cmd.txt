@@ -1,0 +1,285 @@
+# ----------------------------------------------------
+# D22 (Agent SDK + MCP + subagents) : refunds, tickets, and who decided
+# ----------------------------------------------------
+
+
+# ----- One-time setup: Claude Code CLI (the Agent SDK runs on top of it) -----
+node --version                          # need Node.js -- LTS from nodejs.org
+npm install -g @anthropic-ai/claude-code
+claude --version                        # must print a version
+
+# The SDK also shells out to `uvx` to launch the sheets server.
+
+
+# ----- Project setup (run once in this folder) -----
+cd week4_agentic_loop/Week4_agent_sdk/d22/agent_sdk
+uv init --bare                          # creates pyproject.toml
+uv add claude-agent-sdk python-dotenv   # NOT `anthropic` -- different package
+
+
+# ----- Credentials (same service account as d20 and d21) -----
+# week4_agentic_loop/.env:
+#   ANTHROPIC_API_KEY=sk-ant-...
+#   GOOGLE_SHEET_ID=<the sheet id>
+#   SERVICE_ACCOUNT_PATH=C:/Growwstacks/Claude/Code_files/mcp/sheets-service-account.json
+#   ESCALATION_WEBHOOK_URL=https://n8nadmin.1automation.us/webhook/<uuid>
+#
+# The webhook URL goes in .env, not in the .py. That UUID in the path IS the
+# credential -- anyone holding it can post into your workflow. Unset it and
+# the run still works; it just prints "nothing sent" instead of escalating.
+#
+# NOTE: the service account now needs EDITOR access, not Viewer. D20 and D21
+# only read. This day writes the Tickets tab, and a Viewer service account
+# fails that call with a permissions error the agent will report as
+# write_failed.
+
+
+# ----- THE SHEET: three tabs now, and two new columns -----
+#
+#   Order     Order ID | Status | Carrier | ETA Days | Category | Date
+#                                            | Customer Email | Customer Name
+#                                                      ^^^^^^^^^^^^^^^^^^^^^^
+#                                                      all four new in D22
+#
+#   Category + Date  decide the refund.
+#   Email + Name     are for the escalation handoff, so a person can be
+#                    reached once a case stops being the agent's.
+#
+#   Note the column ORDER: Email is G, Name is H. order-lookup/SKILL.md
+#   reports them in that order, so if you swap the columns, swap the Skill.
+#
+#   Delays    Order ID | Reason                        (unchanged from D21)
+#
+#   Tickets   Ticket ID | Order ID | Issue | Resolution | Action By
+#             ^^^^^^^^^ new tab. Header row only -- the agent fills the rest.
+#
+# The code reads these names from the Skills, so if you name a column
+# differently, change it in .claude/skills/*/SKILL.md too.
+#
+# Suggested rows so the three demo questions each land differently:
+#   3001  Shipped   Delhivery  4  Electronics  <a date within 7 days>
+#   1002  Delayed   DTDC       6  Apparel      <a date well over 7 days old>
+#
+# Leave Tickets empty except the header. The first run should create TKT-1.
+
+
+# ----- Everyday run -----
+cd week4_agentic_loop/Week4_agent_sdk/d22/agent_sdk
+uv run order_team_teaching.py
+
+
+# ----- What changed from D21 -----
+# D21 asked: how many workers does this question need? (0, 1 or 2 delegations)
+# D22 asks:  who MADE the decision, and where is that written down?
+#
+#   D21                              D22
+#     two specialists, both READ       three, and one of them WRITES
+#     Order tab: 4 columns             + Category, + Date
+#     answer the customer              + decide a refund
+#     nothing recorded                 every case ends as a Tickets row
+#     the run ends                     ...with Action By = Handle By AI / Human
+#
+# There is NO live approval prompt. The agent never pauses and never waits for
+# a keypress. Escalation is recorded, not enforced: the ticket says who owns
+# the decision, and a human works the queue afterwards.
+#
+# EVERY run files a ticket. Not just the escalated ones, and not just the ones
+# with an order ID:
+#
+#   answered fully              -> Handle By AI
+#   no rule covered it          -> Human
+#   customer gave no order ID   -> Order ID = not_given, Handle By AI
+#   order not in the sheet      -> Human
+#
+# The dull rows matter as much as the interesting ones. Without them "the
+# agent handled it" is a claim nobody can check, and you cannot count what
+# fraction of cases actually needed a person -- which is the one number that
+# tells you whether the rulebook is any good.
+#
+# Note what this costs: the no-ID case used to be the "0 delegations, spends
+# nothing" showcase inherited from D21. It is now 1 delegation, because
+# ticket-writer is a subagent. That is a real trade -- D21's question was how
+# many workers a question needs; D22's is who owned the outcome, and the
+# answer has to be written down every time for the question to mean anything.
+
+
+# ----- The refund rulebook: policy in a FILE, not in code -----
+# refund_rulebook.txt sits next to order_team_teaching.py. Python reads it at startup
+# and pastes it verbatim into the router's system prompt. There is no refund
+# number anywhere in the .py and none in any SKILL.md -- exactly one copy.
+#
+# Three rules. ALL THREE must pass, checked in order:
+#
+#   RULE 1  THE STATUS      Status must read Delivered   -> decides IF
+#   RULE 2  THE WINDOW      Date within 7 days of today  -> decides IF
+#   RULE 3  THE PERCENTAGE  by product category          -> decides HOW MUCH
+#
+# Rule 1 is the cheapest gate and it goes first: an order that has not
+# arrived is a DELIVERY question, not a refund question. Note that it makes
+# the sheet's Status column policy-bearing -- until now it was only reported
+# to the customer, and the delay-analyst branch was the only thing that read
+# it. Change a Status cell and you change a refund outcome.
+#
+#       Electronics  50%      Furniture    30%
+#       Apparel     100%      Perishable    0%
+#
+# To change the policy, edit the .txt and re-run. No Python, no Skill edit,
+# no redeploy. That separation is the point: the person who owns refund policy
+# should never have to open a Skill file.
+#
+#   system_prompt   FACTS the model cannot look up  (sheet id, today's date)
+#                   + the rulebook, pasted in
+#   SKILL.md        HOW TO BEHAVE  (who to delegate to, when to escalate)
+#   rulebook.txt    WHAT THE POLICY IS
+#
+# The Skill deliberately does NOT restate the percentages. If it did, you
+# would have two copies that drift, and the model would have to decide which
+# one wins. It says "read the rulebook you were given, every time" instead.
+#
+# "NOT covered" in the rulebook does not mean refuse. It means do not decide.
+# A 0% category escalates rather than auto-refusing, because refusing money is
+# as consequential as paying it.
+#
+# The file is loaded with a hard failure if it is missing:
+#
+#     raise SystemExit("refund_rulebook.txt is missing or unreadable: ...")
+#
+# Do NOT soften that into a default or a warning. A missing rulebook does not
+# give you a broken run you would notice -- it gives you a confident agent
+# inventing refund percentages. Try it: rename the file and run.
+
+
+# ----- The three escalation triggers -----
+# Any one of these makes the case a human's, and the ticket says so:
+#
+#   1. the customer asks for a human or to escalate
+#   2. no rule covers it -- outside the window, damaged goods, wrong item
+#   3. no progress -- order not_found, a specialist errored, going in circles
+#
+# None of them stop the agent replying. What changes is one column:
+#
+#   Action By = Handle By AI   a rule covered it, the agent decided
+#   Action By = Human          nobody decided yet, a person must
+#
+# Those two strings are DROPDOWN values in the Tickets tab, so they are
+# spelled exactly that way in support-router/SKILL.md and ticket-writer/
+# SKILL.md. Change the dropdown and you must change both Skills -- the sheet
+# is the source of truth for the spelling, and nothing in Python checks it.
+#
+# "Escalated" as a bare flag tells the supervisor nothing. Issue + Resolution
+# on the same row tell them what kind of decision they are about to make.
+
+
+# ----- The handoff: a webhook, and why PYTHON sends it -----
+# When Action By comes back as "Human", post_escalation() POSTs the ticket to
+# ESCALATION_WEBHOOK_URL. Only then -- a webhook that fires on every ticket is
+# one nobody reads, which is the same reason should_escalate returns None by
+# default rather than True.
+#
+# Two deliberate choices:
+#
+#   1. PYTHON sends it, not an agent. A Skill saying "notify a human" is a
+#      request with a failure rate. `if action_by == ACTED_BY_HUMAN` is not.
+#   2. The agent never gets a "POST anywhere" tool. Destination and payload
+#      shape are both fixed in code, so a confused model cannot mail your
+#      customer list to an address it invented.
+#
+# The payload is the D29 structured handoff -- the supervisor has no
+# transcript and about eleven seconds:
+#
+#     ticket_id, order_id, issue, resolution, action_by,
+#     customer_email, agent_reply, specialist_reports,
+#     delegations, turns, cost_usd, raised_at
+#
+# customer_email is BEST EFFORT: it is matched out of the specialist's report
+# with a bounded regex, because it is not one of the five ticket columns. If
+# the lookup never mentioned it, the field is null rather than invented.
+#
+# A failed POST prints loudly and does NOT raise. The ticket row is the
+# record; the webhook is the notification. Losing the notification silently
+# means a case no human is ever told about, so the failure has to be visible.
+
+
+# ----- add_rows does NOT write data -----
+# Worth knowing before you debug a missing ticket. In mcp-google-sheets:
+#
+#     add_rows(spreadsheet_id, sheet, count, start_row)   <- inserts BLANK rows
+#     update_cells(spreadsheet_id, sheet, range, data)    <- writes VALUES
+#
+# add_rows takes a COUNT, not values. A run that called add_rows and stopped
+# has produced an empty row and no ticket. That is why WRITE_TOOLS in
+# order_team_teaching.py lists update_cells and batch_update_cells only, and why
+# ticket-writer/SKILL.md spells out that inserting a blank row is not writing
+# a ticket.
+
+
+# ----- The three demo questions -----
+#   "Order 3001 arrived damaged. Can I get a refund?"
+#        -> inside the window, Electronics = 50%, but DAMAGE is not in the
+#           rulebook at all -> trigger 2 -> Action By = Human
+#
+#   "I want a refund on order 1002, it was late and I am done waiting."
+#        -> delayed, so delay-analyst runs too; Date is ~50 days old, so
+#           RULE 1 fails -> trigger 2 -> Action By = Human
+#
+#   "I want a refund on something I ordered last week."
+#        -> no order ID: it just asks for one, but STILL files a ticket with
+#           Order ID = not_given and Action By = Handle By AI
+#
+# All three escalate, which is deliberate for a first read. To see the OTHER
+# branch, ask a plain question about an order that passes both rules:
+#
+#   "I want to return order 1001, can I get a refund?"
+#        -> Date 3 days old (RULE 1 ok), Electronics = 50% (RULE 2 ok)
+#           -> no trigger -> Action By = Handle By AI, Resolution says 50%
+#
+# That flip between ai and human is the whole day. Change 1001's Category to
+# Perishable and it flips back to human without touching a line of code.
+
+
+# ----- allowed_tools now approves a WRITE -----
+# This is worth stopping on. The list is:
+#
+#     ["Agent", "Task", "mcp__sheets__*", "Skill(...)", ...]
+#
+# "mcp__sheets__*" approves add_rows for EVERY agent, including order-lookup
+# and delay-analyst, which must never write. Nothing in code stops them --
+# only the sentences in their Skills do.
+#
+# That is the D22 point in one line: a Skill is a REQUEST with a non-zero
+# failure rate. If you want the guarantee, name the tools instead of "*":
+#
+#     allowed_tools=[
+#         "Agent", "Task",
+#         "mcp__sheets__get_sheet_data",
+#         "mcp__sheets__add_rows",
+#         "Skill(order-lookup)", "Skill(delay-analysis)", "Skill(ticket-writer)",
+#     ]
+#
+# ...but allowed_tools is GLOBAL, so even that cannot say "add_rows for the
+# ticket-writer only". A per-agent guarantee needs a different shape: a
+# separate session for the writer, or a custom MCP tool that only appends to
+# Tickets and physically cannot touch another tab.
+#
+# Try it: ask "mark order 1004 as shipped" and see which agent obliges.
+
+
+# ----- Verifying the ticket, rather than trusting it -----
+# The Skill ORDERS a ticket every time. run_team watches the stream for an
+# add_rows call and prints:
+#
+#     ticket written: True / False
+#
+# Do not skip that line. It is the difference between "the prompt said to"
+# and "it happened". If it reads False on a case that had an order ID, the
+# instruction was ignored -- which is exactly the failure rate the day is
+# about, caught in the act.
+
+
+# ----- Reading the transcript -----
+# Indented lines happened INSIDE a specialist's own conversation, and the
+# [name] prefix says which specialist. That comes from parent_tool_use_id on
+# each message, so it stays correct even when all three read the same sheet.
+#
+# The ticket-writer's calls appear the same way a read does. Watch WHICH agent
+# is on the line when a write goes past.
