@@ -54,14 +54,9 @@ if prompt:
     )
 
     answer = next(
-
-    block.text
-
-    for block in response.content
-
-    if hasattr(block, "text")
-
-)
+        (block.text for block in response.content if hasattr(block, "text")),
+        ""
+    )
 
     st.session_state.messages.append(
         {"role": "assistant", "content": answer}
