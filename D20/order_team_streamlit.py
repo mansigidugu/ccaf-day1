@@ -2406,31 +2406,47 @@ with tabs[1]:
              "row to Tickets · returns ticket_id, action_by",
              run["hits"]["ticket-writer"]),
     ])
+    # ---- flow diagram: precompute all labels ----
+    _customer_label = (
+        "one message, in their own words: "
+        + short(run["question"] or "nothing asked yet", 160)
+    )
+    _node3_label = (
+        str(run["reads"]) + " read call(s), "
+        + str(run["writes"]) + " write call(s) this run."
+    )
+    _node3_full = (
+        "Holds SERVICE_ACCOUNT_PATH. No agent ever sees the key. "
+        + _node3_label
+    )
+    _sheet_id_display = SHEET_ID if SHEET_ID else "GOOGLE_SHEET_ID is not set"
+    _sheet_label = "Order · Delays · Tickets  --  " + _sheet_id_display
+    _router_label = (
+        "Skill: support-router · system prompt carries today\'s date and "
+        "the refund rulebook verbatim · holds the sheets tools and is "
+        "told not to use them · decides who to call"
+    )
+    _human_label = (
+        "post_escalation() POSTs the ticket to ESCALATION_WEBHOOK_URL. "
+        "Fixed destination, fixed payload -- the model has no POST tool."
+    )
     st.markdown(
         f'<div class="flow">'
-        f'{node("", "1 · the customer", "one message, in their own words: "
-               + short(run["question"] or "nothing asked yet", 160))}'
+        f'{node("", "1 · the customer", _customer_label)}'
         f'<div class="arrow">▼ prompt</div>'
-        f'{node("router", "2 · the router (this process)",
-                "Skill: support-router · system prompt carries today\'s date and "
-                "the refund rulebook verbatim · holds the sheets tools and is "
-                "told not to use them · decides who to call")}'
+        f'{node("router", "2 · the router (this process)", _router_label)}'
         f'<div class="arrow">▼ the Agent tool -- one call per specialist, '
         f'{run["delegations"]} this run</div>'
         f'<div class="fan">{fan}</div>'
         f'<div class="arrow">▼ every one of them talks to the same server</div>'
-        f'{node("", "3 · MCP server: mcp-google-sheets (uvx subprocess)",
-                "Holds SERVICE_ACCOUNT_PATH. No agent ever sees the key. "
-                f"{run['reads']} read call(s), {run['writes']} write call(s) "
-                "this run.")}'
+        f'{node("", "3 · MCP server: mcp-google-sheets (uvx subprocess)", _node3_full)}'
         f'<div class="arrow">▼</div>'
-        f'{node("", "4 · the spreadsheet", "Order · Delays · Tickets  --  "
-                + (SHEET_ID or "GOOGLE_SHEET_ID is not set"))}'
+        f'{node("", "4 · the spreadsheet", _sheet_label)}'
         f'<div class="arrow">▼ only when Action By = Human</div>'
-        f'{node("human", "5 · the handoff (Python, not an agent)",
-                "post_escalation() POSTs the ticket to ESCALATION_WEBHOOK_URL. "
-                "Fixed destination, fixed payload -- the model has no POST tool.")}'
+        f'{node("human", "5 · the handoff (Python, not an agent)", _human_label)}'
         f'</div>', unsafe_allow_html=True)
+
+
 
     st.markdown("#### What happened this time")
     if not run["steps"]:
