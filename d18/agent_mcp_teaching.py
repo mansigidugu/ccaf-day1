@@ -138,8 +138,10 @@ MCP_SERVERS = {
 # we allow four, and the rest may as well not exist. Discovery decides what is
 # POSSIBLE; the allow-list decides what is PERMITTED.
 AIRTABLE_TOOLS = [
-    "search_records",            # keyword search -- answers almost everything
-    "list_records_for_table",    # browse a table  # the one write path: noting a refund
+    "search_records",             # keyword search -- answers almost everything
+    "list_records_for_table",    # browse a table
+    "get_table_schema",          # field names and types
+    "update_records_for_table",  # the one write path: noting a refund
 ]
 
 # The allow-list needs each tool's fully-qualified name: mcp__<server>__<tool>.
